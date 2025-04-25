@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Security Vulnerability Detection</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #eef2f3;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    select, textarea, input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 12px 0;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    .output {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      display: none;
+    }
+    .safe {
+      background: #eaffea;
+      border-left: 6px solid #2ecc71;
+      color: #2e7d32;
+    }
+    .danger {
+      background: #ffecec;
+      border-left: 6px solid #e74c3c;
+      color: #c0392b;
+    }
+    #bufferSizeInput {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Security Vulnerability Detection</h1>
+
+    <label for="testType">Select Test:</label>
+    <select id="testType" onchange="toggleBufferSize()">
+      <option value="buffer">Buffer Overflow</option>
+      <option value="trapdoor">Trapdoor Detection</option>
+      <option value="command">Command Injection</option>
+      <option value="password">Weak Password</option>
+    </select>
+
+    <div id="bufferSizeInput">
+      <label for="bufferSize">Enter Buffer Size:</label>
+      <input type="number" id="bufferSize" placeholder="e.g., 10" min="1">
+    </div>
+
+    <label for="inputData">Input:</label>
+    <textarea id="inputData" rows="4" placeholder="Enter input..."></textarea>
+
+    <button onclick="runTest()">Run Test</button>
+
+    <div id="result" class="output"></div>
+  </div>
+
+  <script>
+    function toggleBufferSize() {
+      const testType = document.getElementById("testType").value;
+      const bufferDiv = document.getElementById("bufferSizeInput");
+      bufferDiv.style.display = (testType === "buffer") ? "block" : "none";
+    }
+
+    function runTest() {
+      const testType = document.getElementById("testType").value;
+      const input = document.getElementById("inputData").value.trim();
+      const resultDiv = document.getElementById("result");
+
+      let result = "";
+      let suggestions = "";
+      let isDanger = false;
+
+      if (testType === "buffer") {
+        const bufferSize = parseInt(document.getElementById("bufferSize").value);
+        if (isNaN(bufferSize) || bufferSize <= 0) {
+          resultDiv.innerHTML = "⚠️ Please enter a valid buffer size.";
+          resultDiv.className = "output danger";
+          resultDiv.style.display = "block";
+          return;
+        }
+
+        if (input.length > bufferSize) {
+          result = "❌ Buffer overflow detected!";
+          suggestions = "- Input exceeds buffer size. Use safer handling techniques.";
+          isDanger = true;
+        } else {
+          result = "✅ No buffer overflow detected.";
+        }
+      } else if (testType === "trapdoor") {
+        const patterns = ["admin", "root", "12345", "superuser", "backdoor", "hardcoded"];
+        const found = patterns.some(p => input.toLowerCase().includes(p));
+        if (found) {
+          result = "❌ Trapdoor (backdoor) detected!";
+          suggestions = "- Avoid hardcoded credentials and privileged bypasses.";
+          isDanger = true;
+        } else {
+          result = "✅ No trapdoor detected.";
+        }
+      } else if (testType === "command") {
+        const risky = [";", "&&", "|", "`", "$(", "<", ">"];
+        const found = risky.some(op => input.includes(op));
+        if (found) {
+          result = "❌ Command injection risk!";
+          suggestions = "- Sanitize user inputs. Avoid using raw input in shell commands.";
+          isDanger = true;
+        } else {
+          result = "✅ No command injection risk.";
+        }
+      } else if (testType === "password") {
+        const weak = ["123456", "password", "admin"];
+        if (input.length < 6 || weak.includes(input.toLowerCase())) {
+          result = "❌ Weak password!";
+          suggestions = "- Use longer, complex passwords with symbols and numbers.";
+          isDanger = true;
+        } else {
+          result = "✅ Strong password.";
+        }
+      }
+
+      resultDiv.innerHTML = `<strong>${result}</strong><br>${suggestions}`;
+      resultDiv.className = isDanger ? "output danger" : "output safe";
+      resultDiv.style.display = "block";
+    }
+
+    // Initialize on load
+    toggleBufferSize();
+  </script>
+</body>
+</html>
+
